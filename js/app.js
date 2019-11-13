@@ -1,5 +1,8 @@
 'use strict';
 
+const page1 = './data/page-1.json';
+const page2 = './data/page-2.json';
+
 function Horns(data) {
   this.image_url = data.image_url;
   this.title = data.title;
@@ -11,25 +14,12 @@ function Horns(data) {
 Horns.all = [];
 
 Horns.prototype.render = function() {
-
-  // Create a new empty div tag
-  let hornOutput = $('<div></div>');
-      hornOutput.addClass(this.keyword);
-
-  // clone (copy) the html from inside the photo-template
-  let template = $('#photo-template').html();
-
-  // Add the template to the output div
-  hornOutput.html( template );
-
-  // Put the data in
-  hornOutput.find('h2').text( this.title );
-  hornOutput.find('img').attr('src', this.image_url);
-  hornOutput.find('p').text(this.description);
-
-  $('main').append(hornOutput);
-
+  let templateMarkup =$('#photo-template').html();
+  let template = Handlebars.compile(templateMarkup);
+  let output = template(this);
+  $('#output').append(output);
 };
+
 
 function populateSelectBox() {
   let seen = {};
@@ -44,18 +34,30 @@ function populateSelectBox() {
 
   console.log(seen);
 }
-
+populateSelectBox();
 $('select').on('change', function() {
   let selected = $(this).val();
   $('div').hide();
   $(`.${selected}`).fadeIn(800);
 });
-
-$.get('../data/page-1.json')
-  .then( data => {
-    data.forEach( (thing) => {
+//  to show the two pages
+const jsonPage = (pages) => {
+  $.get(pages)
+   .then(data =>{
+     data.forEach(thing =>{
       let horn = new Horns(thing);
       horn.render();
     });
-  })
-  .then( () => populateSelectBox() );
+   })
+}
+$(() => jsonPage(page1));
+let selectPage1 = () => {
+  $('section').remove();
+  jsonPage(page1);
+};
+let selectPage2 = () => {
+  $('section').remove();
+  jsonPage(page2);
+};
+$('#page1').on('click', selectPage1);
+$('#page2').on('click', selectPage2);
