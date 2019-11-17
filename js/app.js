@@ -1,137 +1,61 @@
-let obName = [];
-let obKeyword = [];
-let obHorns = [];
-let fileName = '../data/page-1.json';
+'use strict';
 
-const MyHorns = function(image_url, title, description, keyword, horns) {
-  this.image_url = image_url;
-  this.title = title;
-  obName.push(this.title);
-  this.description = description;
-  this.keyword = keyword;
-  obKeyword.push(this.keyword);
-  this.horns = horns;
-  obHorns.push(this.horns);
+function Horns(data) {
+  this.image_url = data.image_url;
+  this.title = data.title;
+  this.description = data.description;
+  this.keyword = data.keyword;
+  this.horns = data.horns;
+  Horns.all.push(this);
 }
+Horns.all = [];
 
-MyHorns.readJson = function(filename) {
-  $.get(filename, 'json').then(myHornsJson => {
-  //Creates the objects from the JSON
-    myHornsJson.forEach(horn => {
-      new MyHorns(horn.image_url, horn.title, horn.description, horn.keyword, horn.horns);
-    });
+Horns.prototype.render = function() {
 
-    //removes duplicates in the arrays that will be pushed to selects later
-    obName = removeDuplicates(obName);
-    obKeyword = removeDuplicates(obKeyword);
-    obHorns = removeDuplicates(obHorns);
-    obHorns.sort(function(a, b) { return a - b }); //Sorts number array by number decending
+  // Create a new empty div tag
+  let hornOutput = $('<div></div>');
+      hornOutput.addClass(this.keyword);
 
-    //Populates Select Filter By Name
-    let opTypeId = 'type';
-    restoreOpDefault(opTypeId);
-    console.log(obKeyword);
-    obKeyword.forEach(horn => {
-      toHtmlOp(horn, opTypeId);
-    });
+  // clone (copy) the html from inside the photo-template
+  let template = $('#photo-template').html();
 
-    //Populates Select Filter by Horns
-    let opHornId = 'horns';
-    restoreOpDefault(opHornId);
-    obHorns.forEach(horn => {
-      toHtmlOp(horn, opHornId);
-    });
+  // Add the template to the output div
+  hornOutput.html( template );
 
-    //Populates Select Filter by Name
-    let opNameId = 'name';
-    restoreOpDefault(opNameId);
-    obName.forEach(horn => {
-      toHtmlOp(horn, opNameId);
-    });
+  // Put the data in
+  hornOutput.find('h2').text( this.title );
+  hornOutput.find('img').attr('src', this.image_url);
+  hornOutput.find('p').text(this.description);
 
-    obKeyword = []; //Clears options to accept new drop down options
-    obHorns = []; //Clears options to accept new drop down options
-    obName = []; //Clears options to accept new drop down options
+  $('main').append(hornOutput);
 
-    //Populates the Images and Titles for the Images to the DOM
-    myHornsJson.forEach(horn => {
-      toHtmlImg(horn.image_url, horn.title, horn.keyword, horn.horns);
-    });
-  });
 };
 
-//Used to populate the Options Dropdown
-function toHtmlOp(keyword, selectId) {
-  let target = $('#opTemp').html(); // pulls the DIV element from the dom to populate later
-  let context = { //inputs the variable into the two template elements
-    'opClass': keyword,
-    'opText': keyword
-  };
-  let templateScript = Handlebars.compile(target); //Compliles the target, empty option into the select element
-  let html = templateScript(context); //Populates the empty option
-  $('#' + selectId).append(html); //appends the data to the DOM
-}
-
-//Used to populate the image tags
-function toHtmlImg(image_url, title, keyword, horns) {
-  let target = $('#imgTemp').html();
-  let context = {
-    'imgKeyword': keyword,
-    'imgTitle': title,
-    'imgSrc': image_url,
-    'imgHorn': horns
-  };
-  let templateScript = Handlebars.compile(target);
-  let html = templateScript(context);
-  $('main').append(html);
-}
-
-function restoreOpDefault(val) {
-  let target = $('#opDefa').html();
-  let context = {
-    'default': val
-  };
-  let templateScript = Handlebars.compile(target); //Compliles the target, empty option into the select element
-  let html = templateScript(context); //Populates the empty option
-  $('#' + val).append(html); //appends the data to the DOM
-}
-
-//used to sort and remove elements in an array passed to it.
-let removeDuplicates = function(arr) {
-  let sortedArray = arr.sort();
-  let len = sortedArray.length - 1;
-  let newArr = [];
-  if (len >= 0) {
-    for (var i = 0; i < len; i++) {
-      if (sortedArray[i] !== sortedArray[i + 1]) {
-        newArr.push(sortedArray[i]);
-      }
+function populateSelectBox() {
+  let seen = {};
+  let select = $('select');
+  Horns.all.forEach( (horn) => {
+    if ( ! seen[horn.keyword] ) {
+      let option = `<option value="${horn.keyword}">${horn.keyword}</option>`;
+      select.append(option);
+      seen[horn.keyword] = true;
     }
-    newArr.push(sortedArray[len]);
-  }
-  return newArr;
+  });
+
+  console.log(seen);
 }
-
-//Event listener and Changes the elements to page-1 JSON
-$('#one').on('click', function() {
-  fileName = '../data/page-1.json';
-  $('div').remove();
-  $('option').remove();
-  $(() => MyHorns.readJson(fileName));
-});
-
-//Event listener and Changes the elements to page-2 JSON
-$('#two').click(function() {
-  fileName = '../data/page-2.json';
-  $('div').remove();
-  $('option').remove();
-  $(() => MyHorns.readJson(fileName));
-});
-
-//Call to start everything off and load objects and load everythign into the DOM
-$(() => MyHorns.readJson(fileName));
 
 $('select').on('change', function() {
+  let selected = $(this).val();
   $('div').hide();
-  $('div.' + $(this).val()).show();
+  $(`.${selected}`).fadeIn(800);
 });
+
+$.get('../data/page-1.json')
+  .then( data => {
+    data.forEach( (thing) => {
+      let horn = new Horns(thing);
+      horn.render();
+    });
+  })
+  .then( () => populateSelectBox() );
