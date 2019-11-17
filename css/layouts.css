@@ -1,11 +1,43 @@
+div img, h2, p{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 div {
-    float: left;
-    height: 250px;
-    margin: 2em;
-    width: 250px;
-  }
-  
-  main {
-    overflow:hidden;
+  width: 33%;
+  height: 210px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  float: left;
+}
+
+footer {
+  margin-top: 10%;
+  width: 100%;
+  display: inline-flex;
+}
+
+
+@media only screen and (max-width: 767px){
+
+  div img, h2, p{
+      margin: auto;
+      display: flex;
+      text-align: center;
+
   }
 
+  div {
+      width: 320px;
+      height: 210px;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      float: left;
+  }
+
+  footer {
+      width: 100%;
+      float: left;
+  }
+}
